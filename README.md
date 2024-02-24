@@ -19,8 +19,11 @@ ECG Signal -> Preprocess ECG SIGNAL & Dataset -> Train model -> Test
 Выбрана эта модель тк согласна статье https://paperswithcode.com/paper/deep-learning-for-ecg-analysis-benchmarks-and она всех выигрывает.
 optimezer - Adam
 loss - bce
-Будет обучена одна multilabel модель для 5 наиболее часто-встречаемых патологий в PTBXL
+Будет обучена одна бинарная модель для классификации патологии AFIB - фибрилляция предсердий
 Все сигналы длиной 10 с с частотой дискр 500, ко всем сигналам применена z-norm.
+
+4. Способ предсказания
+   
 
 
    
