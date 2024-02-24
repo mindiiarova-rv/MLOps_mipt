@@ -1,7 +1,11 @@
 # MLOps_mipt
 
  1. Формулировка задачи
+
+    
 Задача ECG classification.
+
+
 Нужно, используя ЭКГ сигналы, предсказать сердечно-сосудистые заболевания, применяя нейросеть.
 
 ECG Signal -> Preprocess ECG SIGNAL & Dataset -> Train model -> Test
