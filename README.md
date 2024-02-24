@@ -1,10 +1,9 @@
 # MLOps_mipt
 
-1. Формулировка задачи
-
-Задача ECG classification. <br />
-Нужно, используя ЭКГ сигналы, предсказать сердечно-сосудистые заболевания, применяя нейросеть.
-ECG Signal -> Preprocess ECG SIGNAL & Dataset -> Train model -> Test
+# 1. Формулировка задачи
+## Задача ECG classification. <br />
+## Нужно, используя ЭКГ сигналы, предсказать сердечно-сосудистые заболевания, применяя нейросеть.
+## ECG Signal -> Preprocess ECG SIGNAL & Dataset -> Train model -> Test
 
 2. Данные
 Датасет PTBXL - https://www.kaggle.com/datasets/khyeh0719/ptb-xl-dataset - наиболее популярный в этой задаче
