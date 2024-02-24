@@ -6,7 +6,7 @@
 ECG Signal -> Preprocess ECG SIGNAL & Dataset -> Train model -> Test  <br />
 
 ## 2. Данные
-Датасет PTBXL - https://www.kaggle.com/datasets/khyeh0719/ptb-xl-dataset - наиболее популярный в этой задаче
+Датасет [PTBXL](https://www.kaggle.com/datasets/khyeh0719/ptb-xl-dataset) - наиболее популярный в этой задаче
 Всего 21837 записей, каждая запись представляет собой массив размера (12, 5000) (если частота дискр 500) и (12, 1000) (если частота дискр 100)
 Есть две папки : record100 record 500  - с частотой дискретизации 100 и 500. Берем папку с 500, чтобы было больше данных и лучше предсказание модели.
 Формат данных (самих сигналов) - файлы dat + hea  - соответсвенно нужно прочитать их, используя библиотеку wfdb
@@ -14,7 +14,7 @@ ECG Signal -> Preprocess ECG SIGNAL & Dataset -> Train model -> Test  <br />
 Помимо этого в датасете уже есть разделение на train+valid+test.
 
 ## 3. Модель
-Будет обучена модифицированная под одномерные сигналы модель resnet1d18 ( https://pypi.org/project/ecglib/) . Библиотека pytorch, ecglib.
+Будет обучена модифицированная под одномерные сигналы модель resnet1d18  . Библиотека pytorch, (ecglib)[https://pypi.org/project/ecglib/)].
 Выбрана эта модель тк согласна статье https://paperswithcode.com/paper/deep-learning-for-ecg-analysis-benchmarks-and она всех выигрывает.
 optimezer - Adam
 loss - bce
