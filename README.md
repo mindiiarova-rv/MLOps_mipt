@@ -14,12 +14,12 @@ ECG Signal -> Preprocess ECG SIGNAL & Dataset -> Train model -> Test  <br />
 Помимо этого в датасете уже есть разделение на train+valid+test.  <br />
 
 ## 3. Модель
-Будет обучена модифицированная под одномерные сигналы модель resnet1d18  . Библиотека pytorch, [ecglib](https://pypi.org/project/ecglib/)).
-Выбрана эта модель тк согласна статье https://paperswithcode.com/paper/deep-learning-for-ecg-analysis-benchmarks-and она всех выигрывает.
-optimezer - Adam
-loss - bce
-Будет обучена одна бинарная модель для классификации патологии AFIB - фибрилляция предсердий
-Все сигналы длиной 10 с с частотой дискр 500, ко всем сигналам применена z-norm.
+Будет обучена модифицированная под одномерные сигналы модель resnet1d18  . Библиотека pytorch, [ecglib](https://pypi.org/project/ecglib/)).  <br />
+Выбрана эта модель тк согласна статье https://paperswithcode.com/paper/deep-learning-for-ecg-analysis-benchmarks-and она всех выигрывает.  <br />
+optimezer - Adam  <br />
+loss - bce   <br />
+Будет обучена одна бинарная модель для классификации патологии AFIB - фибрилляция предсердий  <br />
+Все сигналы длиной 10 с с частотой дискр 500, ко всем сигналам применена z-norm.  <br />
 
 ## 4. Способ предсказания
    
