@@ -1,31 +1,22 @@
-#датасет
-# Исключить файлы с расширением .dat и .hea
+
 *.dat
+
 *.hea
 
-# Исключить файлы с расширением .pt (чекпоинты модели)
 *.pt
 
-# Исключить Jupyter Notebooks
 *.ipynb
 
-# Исключить директорию .ipynb_checkpoints
 .ipynb_checkpoints/
 
-# Исключить директорию __pycache__
 __pycache__/
 
-# Исключить директорию .pytest_cache
 .pytest_cache/
 
-# Исключить директорию .env
 .env
 
-# Исключить директорию .vscode
 .vscode/
 
-# Исключить директорию .git/
 .git/
 
-# Исключить директорию .dvc/
 .dvc/
