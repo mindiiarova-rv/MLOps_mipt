@@ -1,4 +1,3 @@
-
 *.dat
 
 *.hea
@@ -10,13 +9,3 @@
 .ipynb_checkpoints/
 
 __pycache__/
-
-.pytest_cache/
-
-.env
-
-.vscode/
-
-.git/
-
-.dvc/
