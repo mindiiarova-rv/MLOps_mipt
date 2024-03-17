@@ -15,7 +15,8 @@ from sklearn.metrics import classification_report
 @hydra.main(version_base=None, config_path=".", config_name="config")
 def inference(cfg: DictConfig):
    
-    state_dict = torch.load(cfg.checkpoint_path, map_location=torch.device("cpu"))
+    path = f"{cfg.checkpoint_path}/12_leads_resnet1d18_AFIB.pt"
+    state_dict = torch.load(file, map_location=torch.device("cpu"))
 
     df_test = pd.read_csv(cfg.test_path)
     targets_train = [ [0.0] if 'AFIB' in ast.literal_eval(df_test.iloc[i]['scp_codes']) else [1.0] 
