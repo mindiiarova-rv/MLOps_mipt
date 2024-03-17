@@ -5,7 +5,6 @@
 *.pt
 
 *.ipynb
-
-.ipynb_checkpoints/
-
+**/outputs/
+*.out
 __pycache__/

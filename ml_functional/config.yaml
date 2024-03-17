@@ -1,0 +1,10 @@
+
+device: "cpu"
+batch_size: 1
+num_workers: 4
+
+train_path: "/home/mindiiarova/mlops_train.csv"
+valid_path: "/home/mindiiarova/mlops_train.csv"
+test_path: "/home/mindiiarova/mlops_train.csv"
+
+checkpoint_path: "."
