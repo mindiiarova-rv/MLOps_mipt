@@ -1,6 +1,6 @@
 
 device: "cpu"
-batch_size: 1
+batch_size: 2
 num_workers: 4
 
 train_path: "./example/mlops_example.csv"

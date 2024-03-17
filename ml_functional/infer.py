@@ -24,6 +24,9 @@ def inference(cfg: DictConfig):
     
     df_test["target"] = targets_train
 
+    df_test["ecg_metadata"] = df_test["ecg_metadata"].apply(lambda x: ast.literal_eval(x))
+    df_test["patient_metadata"] = df_test["patient_metadata"].apply(lambda x: ast.literal_eval(x))
+
     test_dataset = EcgDataset(df_test, df_test.target.values)
 
     model = create_model(model_name="resnet1d18", pathology='AFIB')
@@ -38,14 +41,14 @@ def inference(cfg: DictConfig):
     for batch in tqdm(data_loader, total=len(data_loader)):
         index, (input, targets) = batch
 
-        outputs =  torch.nn.Sigmoid()(model(input))
+        outputs =  torch.nn.Sigmoid()(model(input[0]))
         
         targets = targets.to(cfg.device) 
 
         raw_preds.extend(outputs.tolist())
         true_labels.extend(targets.tolist())
 
-    print(classification_report(true_labels, raw_preds, zero_division=False))
+    #print(classification_report(true_labels, raw_preds, zero_division=False))
     
 if __name__ == "__main__":
     inference()

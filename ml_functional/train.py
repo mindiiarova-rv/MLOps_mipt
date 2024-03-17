@@ -75,7 +75,7 @@ class Trainer:
             enumerate(self.train_loader), total=len(self.train_loader)
         ):
             index, (input, targets) = batch
-
+         
             inp = input[0].to(self.device)
             targets = targets.to(self.device)
             
@@ -131,7 +131,13 @@ def train_model(cfg: DictConfig):
            for i in range(train_df.shape[0])]
     
     train_df["target"] = targets_train
-    
+
+    train_df["ecg_metadata"] = train_df["ecg_metadata"].apply(lambda x: ast.literal_eval(x))
+    train_df["patient_metadata"] = train_df["patient_metadata"].apply(lambda x: ast.literal_eval(x))
+
+    valid_df["ecg_metadata"] = valid_df["ecg_metadata"].apply(lambda x: ast.literal_eval(x))
+    valid_df["patient_metadata"] = valid_df["patient_metadata"].apply(lambda x: ast.literal_eval(x))
+
     targets_valid = [ [0.0] if 'AFIB' in ast.literal_eval(valid_df.iloc[i]['scp_codes']) else [1.0] 
            for i in range(valid_df.shape[0])]
     
