@@ -1,7 +1,7 @@
 # MLOps_mipt
 
 ## Структура репозитория
-tree -l 2 -o output.txt
+
 
 ## 1. Формулировка задачи
 Задача ECG classification. <br />
