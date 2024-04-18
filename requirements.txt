@@ -6,3 +6,4 @@ omegaconf>=2.3.0
 ecglib
 scikit_learn==1.2.2
 pre-commit==3.6.0
+pytorch_lightning==1.5.10
