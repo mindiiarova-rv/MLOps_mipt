@@ -1,7 +1,7 @@
-torch
-pandas
-tqdm
-hydra-core
-omegaconf
+torch==1.13.0
+pandas>=1.5.2
+tqdm>=4.64.0
+hydra_core==1.3.2
+omegaconf>=2.3.0
 ecglib
-scikit-learn
+scikit_learn==1.2.2
