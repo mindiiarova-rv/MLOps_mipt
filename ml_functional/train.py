@@ -2,6 +2,7 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 import ast
+import mlflow
 
 from torch.utils.data import DataLoader
 from ecglib.data import EcgDataset
@@ -83,8 +84,6 @@ def train_model(cfg: DictConfig):
     train_df = pd.read_csv(cfg.train_path)
     valid_df = pd.read_csv(cfg.valid_path)
 
-    # ... преобразование данных DataFrame ...
-
     datamodule = EcgLightningDataModule(cfg, train_df, valid_df)
     model = EcgLightningModule(cfg)
 
@@ -95,8 +94,35 @@ def train_model(cfg: DictConfig):
         checkpoint_callback=True,
         checkpoint_dir=cfg.checkpoint_path,
     )
-
+    
+    mlflow_callback = MlflowLoggingCallback(
+        tracking_uri="http://localhost:5000",
+        experiment_name="my_experiment"
+    )
+    
     trainer.fit(model, datamodule=datamodule)
 
 if __name__ == "__main__":
     train_model()
+
+class MlflowLoggingCallback(pl.Callback):
+    def __init__(self, tracking_uri, experiment_name):
+        super().__init__()
+        self.tracking_uri = tracking_uri
+        self.experiment_name = experiment_name
+        self.run = None
+
+    def on_fit_start(self, trainer, pl_module):
+        mlflow.set_tracking_uri(self.tracking_uri)
+        mlflow.set_experiment(self.experiment_name)
+        self.run = mlflow.start_run()
+
+    def on_train_epoch_end(self, trainer, pl_module):
+        mlflow.log_metric("train_loss", pl_module.trainer.callback_metrics["train_loss"])
+
+    def on_validation_epoch_end(self, trainer, pl_module):
+        mlflow.log_metric("val_loss", pl_module.trainer.callback_metrics["val_loss"])
+        mlflow.log_metric("avg_val_loss", pl_module.trainer.callback_metrics["avg_val_loss"])
+
+    def on_fit_end(self, trainer, pl_module):
+        mlflow.end_run()
