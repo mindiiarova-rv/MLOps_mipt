@@ -2,9 +2,11 @@
 device: "cpu"
 batch_size: 2
 num_workers: 4
+epochs: 10
+experiment_name: example-experiment
 
-train_path: "/root/MLOps_mipt/examples/train_ptbxll.csv"
-valid_path: "/root/MLOps_mipt/examples/train_ptbxll.csv"
+train_path: "/home/mindiiarova/MLOps_mipt/examples/output.csv"
+valid_path: "/home/mindiiarova/MLOps_mipt/examples/output.csv"
 test_path: "./example/mlops_example.csv"
 
 checkpoint_path: "."
