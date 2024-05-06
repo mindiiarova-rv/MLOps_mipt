@@ -2,7 +2,6 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 import ast
-import mlflow
 
 from torch.utils.data import DataLoader
 from ecglib.data import EcgDataset
@@ -10,119 +9,142 @@ from ecglib.models.model_builder import create_model
 from utils.losses import get_loss
 
 import hydra
+
 from omegaconf import DictConfig
-import pytorch_lightning as pl
 
-class EcgLightningModule(pl.LightningModule):
-    def __init__(self, cfg, model_name='resnet1d18', pathology='AFIB'):
-        super().__init__()
+
+class Trainer:
+    def __init__(self, cfg):
         self.cfg = cfg
-        self.model = create_model(model_name, pathology)
-        self.criterion = get_loss(device=self.cfg.device, df=None)
+        self.train_loader = None
+        self.valid_loader = None
+        self.model = create_model(model_name="resnet1d18", pathology="AFIB")
+        self.criterion = None
+        self.optimizer = torch.optim.Adam(self.model.parameters())
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer=self.optimizer
+        )
+        self.epochs = cfg.epochs
+        self.device = cfg.device
+        self.augmentation = None
 
-    def forward(self, input):
-        return self.model(input)
+    def _init_dataloaders(self, cfg, train_df, valid_df):
+        train_loader = self.get_dataset_loader(train_df, cfg)
+        valid_loader = self.get_dataset_loader(valid_df, cfg)
+        return train_loader, valid_loader
 
-    def training_step(self, batch, batch_idx):
-        index, (input, targets) = batch
-        inp = input[0].to(self.device)
-        targets = targets.to(self.device)
-        outputs = self.model(inp)
-        loss = self.criterion(outputs, targets)
-        self.log('train_loss', loss)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        index, (input, targets) = batch
-        inp = input[0].to(self.device)
-        targets = targets.to(self.device)
-        outputs = self.model(inp)
-        loss = self.criterion(outputs, targets)
-        self.log('val_loss', loss)
-
-    def validation_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        self.log('avg_val_loss', avg_loss)
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.model.parameters())
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer)
-        return [optimizer], [scheduler]
-
-class EcgLightningDataModule(pl.LightningDataModule):
-    def __init__(self, cfg, train_df=None, valid_df=None):
-        super().__init__()
-        self.cfg = cfg
-        self.train_df = train_df
-        self.valid_df = valid_df
-
-    def setup(self, stage=None):
-        if stage == 'fit' or stage is None:
-            self.train_dataset = EcgDataset(self.train_df, self.train_df.target.values)
-            self.valid_dataset = EcgDataset(self.valid_df, self.valid_df.target.values)
-
-    def train_dataloader(self):
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.cfg.batch_size,
+    def get_dataset_loader(
+        self,
+        df: pd.DataFrame,
+        cfg,
+    ):
+        ecg_dataset = EcgDataset(df, df.target.values, data_type="npz")
+        ecg_loader = DataLoader(
+            ecg_dataset,
+            batch_size=cfg.batch_size,
             shuffle=True,
-            num_workers=self.cfg.num_workers,
+            num_workers=cfg.num_workers,
             drop_last=True,
         )
+        return ecg_loader
 
-    def val_dataloader(self):
-        return DataLoader(
-            self.valid_dataset,
-            batch_size=self.cfg.batch_size,
-            shuffle=False,
-            num_workers=self.cfg.num_workers,
-            drop_last=True,
-        )
+    def train(self):
+        for ep in range(self.epochs):
+            train_loss, val_loss = self.train_epoch()
+            print(train_loss, val_loss)
+            self.save_checkpoint()
+        print("Training completed!")
+
+    def train_epoch(self):
+        train_loss = self.train_fn()
+        val_loss = self.eval_fn()
+
+        self.scheduler.step(val_loss)
+
+        return train_loss, val_loss
+
+    def train_fn(self):
+        sum_loss = 0
+        self.model.train()
+
+        for bi, batch in tqdm(
+            enumerate(self.train_loader), total=len(self.train_loader)
+        ):
+            index, (input, targets) = batch
+
+            inp = input[0].to(self.device)
+            targets = targets.to(self.device)
+
+            self.optimizer.zero_grad()
+            outputs = self.model(inp)
+
+            loss = self.criterion(outputs, targets)
+
+            loss.backward()
+            sum_loss += loss.detach().item()
+
+            self.optimizer.step()
+
+        return sum_loss / len(self.train_loader)
+
+    def eval_fn(self):
+        self.model.eval()
+        sum_loss = 0
+
+        with torch.no_grad():
+            for bi, batch in tqdm(
+                enumerate(self.valid_loader), total=len(self.valid_loader)
+            ):
+                index, (input, targets) = batch
+
+                inp = input[0].to(self.device)
+                targets = targets.to(self.device)
+
+                outputs = self.model(inp)
+
+                loss = self.criterion(outputs, targets)
+
+                sum_loss += loss.detach().item()
+
+        return sum_loss / len(self.valid_loader)
+
+    def save_checkpoint(self):
+        checkpoint_dir = self.cfg.checkpoint_path
+        checkpoint_path = f"{checkpoint_dir}/12_leads_resnet1d18_AFIB.pt"
+
+        torch.save(self.model.state_dict(), checkpoint_path)
+
 
 @hydra.main(version_base=None, config_path=".", config_name="config")
 def train_model(cfg: DictConfig):
     train_df = pd.read_csv(cfg.train_path)
     valid_df = pd.read_csv(cfg.valid_path)
 
-    datamodule = EcgLightningDataModule(cfg, train_df, valid_df)
-    model = EcgLightningModule(cfg)
+    targets_train = [
+        [0.0] if "AFIB" in ast.literal_eval(train_df.iloc[i]["scp_codes"]) else [1.0]
+        for i in range(train_df.shape[0])
+    ]
 
-    trainer = pl.Trainer(
-        max_epochs=10,
-        gpus=cfg.gpus,
-        progress_bar_refresh_rate=20,
-        checkpoint_callback=True,
-        checkpoint_dir=cfg.checkpoint_path,
+    train_df["target"] = targets_train
+
+    targets_valid = [
+        [0.0] if "AFIB" in ast.literal_eval(valid_df.iloc[i]["scp_codes"]) else [1.0]
+        for i in range(valid_df.shape[0])
+    ]
+
+    valid_df["target"] = targets_valid
+
+    trainer = Trainer(cfg)
+
+    trainer.train_loader, trainer.valid_loader = trainer._init_dataloaders(
+        cfg, train_df, valid_df
     )
-    
-    mlflow_callback = MlflowLoggingCallback(
-        tracking_uri="http://localhost:5000",
-        experiment_name="my_experiment"
+    trainer.criterion = get_loss(
+        device=trainer.device,
+        df=train_df,
     )
-    
-    trainer.fit(model, datamodule=datamodule)
+    trainer.train()
+
 
 if __name__ == "__main__":
     train_model()
-
-class MlflowLoggingCallback(pl.Callback):
-    def __init__(self, tracking_uri, experiment_name):
-        super().__init__()
-        self.tracking_uri = tracking_uri
-        self.experiment_name = experiment_name
-        self.run = None
-
-    def on_fit_start(self, trainer, pl_module):
-        mlflow.set_tracking_uri(self.tracking_uri)
-        mlflow.set_experiment(self.experiment_name)
-        self.run = mlflow.start_run()
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        mlflow.log_metric("train_loss", pl_module.trainer.callback_metrics["train_loss"])
-
-    def on_validation_epoch_end(self, trainer, pl_module):
-        mlflow.log_metric("val_loss", pl_module.trainer.callback_metrics["val_loss"])
-        mlflow.log_metric("avg_val_loss", pl_module.trainer.callback_metrics["avg_val_loss"])
-
-    def on_fit_end(self, trainer, pl_module):
-        mlflow.end_run()
